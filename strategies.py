@@ -18,6 +18,7 @@ from llama_index.postprocessor.jinaai_rerank import JinaRerank
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from flashrank import Ranker, RerankRequest
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core import get_response_synthesizer
 
 import qdrant_client
 import weaviate
@@ -147,3 +148,10 @@ def get_llm(name: str):
         return Ollama(model="deepseek-llm:7b-chat", base_url=OLLAMA_BASE_URL, request_timeout=120.0)
 
     raise ValueError(f"LLM '{name}' non supportato.")
+
+def get_synthesizer(llm, response_mode="compact"):
+    """Crea il componente di sintesi della risposta."""
+    return get_response_synthesizer(
+        llm=llm,
+        response_mode=response_mode
+    )

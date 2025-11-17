@@ -1,3 +1,5 @@
+numpy
+pandas
 # Core Framework
 llama-index
 torch
