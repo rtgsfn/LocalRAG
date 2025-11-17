@@ -1,0 +1,35 @@
+# Core Framework
+llama-index
+torch
+llama-index-core
+pyarrow>15.0.0
+
+# Servizi (Ollama, Vector Stores)
+llama-index-llms-ollama
+llama-index-vector-stores-qdrant
+qdrant-client
+llama-index-vector-stores-weaviate
+weaviate-client
+
+# --- Componenti Pipeline ---
+
+# Embedding (HuggingFace)
+llama-index-embeddings-huggingface
+sentence-transformers
+
+# Parsing (VLM)
+llama-index-readers-nougat-ocr
+llama-index-readers-file
+
+# Chunking
+llama-index-experimental
+
+
+# Retrieval (Hybrid/BM25)
+llama-index-retrievers-bm25
+
+# Reranking
+llama-index-postprocessor-flag-embedding-reranker
+llama-index-postprocessor-jinaai-rerank
+flashrank
+

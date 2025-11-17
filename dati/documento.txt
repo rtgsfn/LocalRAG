@@ -1,0 +1,7 @@
+# dati/documento.txt
+
+L'intelligenza artificiale (IA) sta trasformando il mondo.
+Il RAG (Retrieval-Augmented Generation) è una tecnica chiave.
+Permette ai modelli linguistici di grandi dimensioni (LLM) di accedere a informazioni esterne.
+Questo processo combina il recupero di informazioni (retrieval) con la generazione di testo.
+I modelli locali, come Llama 3, rendono questa tecnologia accessibile.
