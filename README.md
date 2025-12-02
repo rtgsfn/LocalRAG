@@ -49,30 +49,34 @@ Ollama: Devi aver installato e in esecuzione Ollama (ollama.com) sul tuo compute
 Setup
 Clona o Scarica questo Progetto:
 
-Bash
+```Bash
 
 git clone [TUA_REPO_URL]
 cd LocalRAG-Benchmark-Tool
+```
 Crea un Ambiente Virtuale (con Python 3.10+):
 
-Bash
+```Bash
 
 python -m venv .venv
 .\.venv\Scripts\activate
+```
 Installa le Dipendenze:
 
-Bash
+```Bash
 
 pip install -r requirements.txt
+```
 Scarica i Modelli Ollama: Questo script non scarica i modelli. Devi farlo tu manualmente per ogni modello che vuoi testare.
 
-Bash
+```bash
 
 # Esempio per scaricare i modelli di base
 ollama pull llama3:8b-instruct
 ollama pull mistral:7b-instruct-v0.2
 ollama pull all-minilm
 ollama pull bge-reranker
+```
 🚀 Come Usarlo: Il Workflow in 3 Fasi
 Il tuo workflow sarà sempre diviso in tre fasi: Benchmark, Analisi, Test.
 
@@ -194,7 +198,6 @@ Apri run_benchmark.py.
 
 Scorri in fondo al file (sezione if __name__ == "__main__":) e configura le liste di test:
 
-Python
 ```bash
 # Esempio di configurazione per la POC
 PARSERS = ["nougat_associative", "simple_pdf"]  # Confronta VLM vs Standard
@@ -234,11 +237,12 @@ Apri test_rag.py.
 
 Modifica le costanti in alto con i vincitori del benchmark:
 
-Python
+```bash
 
 PARSER_CHOICE = "nougat_associative"
 CHUNKER_CHOICE = "semantic"
 # ... ecc
+```
 Avvia la chat:
 
 ```Bash
