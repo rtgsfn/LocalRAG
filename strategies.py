@@ -1,4 +1,5 @@
 # strategies.py
+import re
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.node_parser import (
     MarkdownNodeParser, HierarchicalNodeParser
@@ -19,6 +20,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank
 from flashrank import Ranker, RerankRequest
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core import get_response_synthesizer
+from llama_index.core.schema import Document
 
 import qdrant_client
 import weaviate
@@ -29,12 +31,61 @@ from config import (
 )
 
 
+class AssociativeNougatParser:
+    def __init__(self):
+        self.nougat = PDFNougatOCR()
+
+    def load_data(self, file_path):
+        # 1. Usa il VLM (Nougat) per ottenere il contenuto grezzo (Markdown)
+        # Nougat è ottimo perché converte le tabelle in testo strutturato
+        documents = self.nougat.load_data(file_path)
+
+        enhanced_documents = []
+
+        for doc in documents:
+            original_text = doc.text
+
+            # 2. Logica di Associazione (Post-Processing richiesto dall'offerta)
+            # Cerchiamo pattern di tabelle o figure nel markdown di Nougat
+            # Esempio pattern tabella Markdown: | col | col |
+
+            # Aggiungiamo un ID univoco alle sezioni identificate come tabelle
+            chunks = re.split(r'(\n\|.*\|\n)', original_text)  # Split grezzo sulle tabelle md
+
+            processed_text = ""
+            table_counter = 0
+
+            for chunk in chunks:
+                if chunk.strip().startswith('|'):  # È una tabella
+                    table_id = f"TAB_{table_counter:03d}"
+                    # Iniettiamo l'ID nel testo in modo che l'LLM possa citarlo
+                    processed_text += f"\n\n[RIFERIMENTO {table_id}]\n{chunk}\n[FINE {table_id}]\n\n"
+                    table_counter += 1
+                else:
+                    processed_text += chunk
+
+            # 3. Aggiorna il documento con il testo "arricchito"
+            # I metadati extra possono essere usati per il retrieval avanzato
+            new_doc = Document(
+                text=processed_text,
+                metadata={
+                    **doc.metadata,
+                    "vlm_model": "nougat",
+                    "extracted_tables_count": table_counter
+                }
+            )
+            enhanced_documents.append(new_doc)
+
+        return enhanced_documents
+
 # --- 1. Parser Factory ---
 def get_parser(name: str):
     if name == "simple_pdf":
         return SimpleDirectoryReader()
     if name == "nougat":
         return PDFNougatOCR()
+    if name == "nougat_associative":
+        return AssociativeNougatParser()
     raise ValueError(f"Parser '{name}' non supportato.")
 
 

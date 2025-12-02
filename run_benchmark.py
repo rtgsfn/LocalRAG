@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
     # --- !! QUI DEFINISCI TUTTE LE COMBINAZIONI !! ---
     # (Come prima)
-    PARSERS = ["simple_pdf"]
+    PARSERS = ["simple_pdf", "nougat", "nougat_associative"]
     CHUNKERS = ["recursive", "semantic"]
     EMBEDDERS = ["all-minilm", "bge-large"]
     VECTOR_STORES = ["qdrant"]
