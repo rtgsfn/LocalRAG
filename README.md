@@ -195,15 +195,15 @@ Apri run_benchmark.py.
 Scorri in fondo al file (sezione if __name__ == "__main__":) e configura le liste di test:
 
 Python
-
+```bash
 # Esempio di configurazione per la POC
 PARSERS = ["nougat_associative", "simple_pdf"]  # Confronta VLM vs Standard
 CHUNKERS = ["semantic", "recursive"]            # Confronta Chunking Intelligente vs Fisso
 EMBEDDERS = ["bge-large"]
 RERANKERS = ["bge-reranker", "none"]            # Valuta l'impatto del Reranking
 LLMS = ["llama3:8b"]
-Nota: L'uso di nougat_associative richiede GPU e tempo (circa 30-60 sec/pagina) per la prima esecuzione. I risultati vengono salvati in cache per i test successivi.
-
+# Nota: L'uso di nougat_associative richiede GPU e tempo (circa 30-60 sec/pagina) per la prima esecuzione. I risultati vengono salvati in cache per i test successivi.
+```
 Lancia il benchmark:
 
 ```bash
