@@ -153,5 +153,103 @@ export_chunks.py: Script opzionale per esportare tutti i chunk e i loro ID in un
 
 requirements.txt: Tutte le dipendenze Python.
 
+## 📖 Guida all'Utilizzo (Workflow POC)
+
+Questa sezione descrive come utilizzare il framework per eseguire la **Proof of Concept (POC)** richiesta, partendo dal documento grezzo fino alla chat interattiva.
+
+### 1. Setup Iniziale
+Prima di avviare gli script, assicurati che l'ambiente sia pronto.
+
+**A. Installa le dipendenze Python**
+```bash
+pip install -r requirements.txt
+```
+
+**B. Prepara i Modelli Locali (Ollama) Il framework si appoggia a Ollama per l'inferenza locale. Scarica i modelli necessari per coprire tutte le fasi (Embedding, Reranking, Generazione):**
+
+```bash
+
+# Modello LLM per la generazione (Fase 3)
+ollama pull llama3:8b-instruct
+
+# Modello LLM alternativo per confronto
+ollama pull mistral:7b-instruct-v0.2
+
+# Modello per Embedding (Fase 1/2)
+ollama pull bge-m3
+```
+### 2. Configurazione del Test (Fase 1 - Ingestione)
+Posiziona il tuo documento (es. capitolato_tecnico.pdf) nella cartella del progetto.
+
+Modifica il file config.py:
+
+Imposta TEST_FILE con il percorso del tuo PDF.
+
+Aggiorna la lista EVAL_QUESTIONS con domande reali e specifiche (es. "Quali sono le tolleranze per i cuscinetti?"). Queste domande sono fondamentali per calcolare le metriche di Faithfulness (Fedeltà) e Relevancy (Pertinenza).
+
+### 3. Esecuzione del Benchmark (Stress Test)
+Lo script run_benchmark.py esegue una combinatoria di tutte le strategie configurate per trovare la pipeline migliore.
+
+Apri run_benchmark.py.
+
+Scorri in fondo al file (sezione if __name__ == "__main__":) e configura le liste di test:
+
+Python
+
+# Esempio di configurazione per la POC
+PARSERS = ["nougat_associative", "simple_pdf"]  # Confronta VLM vs Standard
+CHUNKERS = ["semantic", "recursive"]            # Confronta Chunking Intelligente vs Fisso
+EMBEDDERS = ["bge-large"]
+RERANKERS = ["bge-reranker", "none"]            # Valuta l'impatto del Reranking
+LLMS = ["llama3:8b"]
+Nota: L'uso di nougat_associative richiede GPU e tempo (circa 30-60 sec/pagina) per la prima esecuzione. I risultati vengono salvati in cache per i test successivi.
+
+Lancia il benchmark:
+
+```bash
+
+python run_benchmark.py
+```
+Output: Al termine, troverai il file rag_hyper_benchmark_results.csv contenente metriche vitali come:
+
+avg_faithfulness: Quanto il bot è preciso (Anti-Allucinazione).
+
+ingestion_time_s: Tempo richiesto per processare il PDF.
+
+retrieval_time_s: Latenza nel trovare le risposte.
+
+### 4. Analisi dei Risultati (Fase 2)
+Per interpretare i dati senza usare Excel, usa lo script di analisi integrato:
+
+```Bash
+
+python analyze_results.py
+```
+Questo script stampa a video un confronto "Testa a Testa" (Ablation Study), mostrandoti ad esempio se il Reranker vale il costo in termini di latenza aggiuntiva.
+
+### 5. Chat Interattiva (Fase 3 - Demo)
+Una volta identificata la configurazione "Vincente" dal CSV (quella con il miglior bilanciamento tra Faithfulness e Tempo), configurala per la demo live.
+
+Apri test_rag.py.
+
+Modifica le costanti in alto con i vincitori del benchmark:
+
+Python
+
+PARSER_CHOICE = "nougat_associative"
+CHUNKER_CHOICE = "semantic"
+# ... ecc
+Avvia la chat:
+
+```Bash
+
+python test_rag.py
+```
+Ora puoi interrogare il documento in linguaggio naturale. Il sistema mostrerà:
+
+La risposta generata.
+
+I Chunk (Sorgenti) recuperati, permettendoti di verificare se il sistema ha letto correttamente tabelle e didascalie.
+
 ⚖️ Licenza
 Questo progetto è rilasciato sotto licenza MIT.
