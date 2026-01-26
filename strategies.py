@@ -19,7 +19,7 @@ from llama_index.postprocessor.jinaai_rerank import JinaRerank
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from flashrank import Ranker, RerankRequest
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core import get_response_synthesizer
+from llama_index.core import get_response_synthesizer, PromptTemplate
 from llama_index.core.schema import Document
 
 import qdrant_client
@@ -36,42 +36,49 @@ class AssociativeNougatParser:
         self.nougat = PDFNougatOCR()
 
     def load_data(self, file_path):
-        # 1. Usa il VLM (Nougat) per ottenere il contenuto grezzo (Markdown)
-        # Nougat è ottimo perché converte le tabelle in testo strutturato
+        # 1. Caricamento tramite Nougat OCR (VLM)
         documents = self.nougat.load_data(file_path)
-
         enhanced_documents = []
 
         for doc in documents:
             original_text = doc.text
 
-            # 2. Logica di Associazione (Post-Processing richiesto dall'offerta)
-            # Cerchiamo pattern di tabelle o figure nel markdown di Nougat
-            # Esempio pattern tabella Markdown: | col | col |
-
-            # Aggiungiamo un ID univoco alle sezioni identificate come tabelle
-            chunks = re.split(r'(\n\|.*\|\n)', original_text)  # Split grezzo sulle tabelle md
+            # 2. Regex avanzata per identificare Tabelle (|...|) e Figure (\[figure...\])
+            # Nougat usa spesso pattern come [figure] o \begin{table}
+            # Questo pattern divide il testo mantenendo i delimitatori
+            chunks = re.split(r'(\n\|.*\|\n|\\\[figure.*?\\\])', original_text, flags=re.DOTALL)
 
             processed_text = ""
             table_counter = 0
+            figure_counter = 0
 
             for chunk in chunks:
-                if chunk.strip().startswith('|'):  # È una tabella
+                if not chunk.strip():
+                    continue
+
+                # Identificazione TABELLE
+                if chunk.strip().startswith('|'):
                     table_id = f"TAB_{table_counter:03d}"
-                    # Iniettiamo l'ID nel testo in modo che l'LLM possa citarlo
-                    processed_text += f"\n\n[RIFERIMENTO {table_id}]\n{chunk}\n[FINE {table_id}]\n\n"
+                    processed_text += f"\n\n[RIFERIMENTO {table_id}]\n{chunk.strip()}\n[FINE {table_id}]\n\n"
                     table_counter += 1
+
+                # Identificazione FIGURE / DIAGRAMMI
+                elif "[figure" in chunk.lower() or "\\begin{figure}" in chunk.lower():
+                    fig_id = f"FIG_{figure_counter:03d}"
+                    processed_text += f"\n\n[RIFERIMENTO {fig_id}]\n{chunk.strip()}\n[FINE {fig_id}]\n\n"
+                    figure_counter += 1
+
                 else:
                     processed_text += chunk
 
-            # 3. Aggiorna il documento con il testo "arricchito"
-            # I metadati extra possono essere usati per il retrieval avanzato
+            # 3. Creazione del documento arricchito con metadati per il benchmark
             new_doc = Document(
                 text=processed_text,
                 metadata={
                     **doc.metadata,
                     "vlm_model": "nougat",
-                    "extracted_tables_count": table_counter
+                    "extracted_tables": table_counter,
+                    "extracted_figures": figure_counter
                 }
             )
             enhanced_documents.append(new_doc)
@@ -200,9 +207,35 @@ def get_llm(name: str):
 
     raise ValueError(f"LLM '{name}' non supportato.")
 
+
 def get_synthesizer(llm, response_mode="compact"):
-    """Crea il componente di sintesi della risposta."""
+    """
+    Crea il componente di sintesi della risposta con un prompt
+    che forza l'LLM a citare le fonti e a non allucinare.
+    """
+
+    # Definiamo il template per la QA (Question Answering)
+    qa_prompt_tmpl_str = (
+        "Sei un assistente tecnico esperto per il Gruppo Ferrero. "
+        "Le tue risposte devono essere basate ESCLUSIVAMENTE sul contesto fornito sotto.\n"
+        "REGOLE RIGIDE:\n"
+        "1. Se la risposta non è contenuta nel contesto, rispondi: 'Informazione non trovata nel capitolato'.\n"
+        "2. Non usare conoscenze esterne.\n"
+        "3. CITA SEMPRE i riferimenti alle tabelle o figure se presenti (es. [RIFERIMENTO TAB_001]).\n"
+        "4. Indica il numero della fonte o del documento se disponibile.\n\n"
+        "CONTESTO:\n"
+        "---------------------\n"
+        "{context_str}\n"
+        "---------------------\n\n"
+        "DOMANDA: {query_str}\n\n"
+        "RISPOSTA TECNICA:"
+    )
+
+    qa_prompt = PromptTemplate(qa_prompt_tmpl_str)
+
+    # Il synthesizer userà questo prompt per ogni generazione
     return get_response_synthesizer(
         llm=llm,
-        response_mode=response_mode
+        response_mode=response_mode,
+        text_qa_template=qa_prompt
     )

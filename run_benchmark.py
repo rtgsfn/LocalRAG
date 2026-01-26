@@ -127,10 +127,10 @@ def run_query_experiment(index: VectorStoreIndex, config: QueryConfig, llm, rera
 
         retriever = QueryFusionRetriever(
             retrievers=[dense_retriever, sparse_retriever],
-            similarity_top_k=10,
-            mode="reciprocal_rerank",  # RRF
-            num_queries=1,
-            use_async=False,  # Mettiamo False per profiling più semplice
+            similarity_top_k=10,  # Recupera i top 10 da entrambi
+            num_queries=1,  # Una sola query per mantenere la latenza bassa (on-premise)
+            mode="reciprocal_rerank",  # RRF: combina i ranking di BM25 e Vector Search
+            use_async=False,
         )
 
         # 2. Synthesizer
@@ -211,10 +211,9 @@ if __name__ == "__main__":
 
     # --- !! QUI DEFINISCI TUTTE LE COMBINAZIONI !! ---
     # (Come prima)
-    PARSERS = ["simple_pdf", "nougat", "nougat_associative"]
-    CHUNKERS = ["recursive", "semantic"]
-    EMBEDDERS = ["all-minilm", "bge-large"]
-    VECTOR_STORES = ["qdrant"]
+    PARSERS = ["simple_pdf", "nougat_associative"]
+    CHUNKERS = ["recursive", "semantic"]  # Il benchmark testerà entrambi su entrambi i parser
+    EMBEDDERS = ["bge-large"]
     RERANKERS = ["none", "bge-reranker"]
     LLMS = ["llama3:8b", "mistral:7b"]
 
