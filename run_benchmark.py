@@ -215,6 +215,7 @@ if __name__ == "__main__":
     CHUNKERS = ["recursive", "semantic"]  # Il benchmark testerà entrambi su entrambi i parser
     EMBEDDERS = ["bge-large"]
     RERANKERS = ["none", "bge-reranker"]
+    VECTOR_STORES = ["qdrant"]
     LLMS = ["llama3:8b", "mistral:7b"]
 
     # --- Creazione combinazioni ---
