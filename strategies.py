@@ -21,6 +21,7 @@ from flashrank import Ranker, RerankRequest
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core import get_response_synthesizer, PromptTemplate
 from llama_index.core.schema import Document
+from llama_index.core.response_synthesizers.factory import get_response_synthesizer, ResponseMode
 
 import qdrant_client
 import weaviate
@@ -101,8 +102,7 @@ def get_chunker(name: str, embed_model_for_semantic=None):
     if name == "fixed_window":
         return SentenceSplitter(chunk_size=512, chunk_overlap=50)
     if name == "recursive":
-        return SentenceSplitter(chunk_size=512, chunk_overlap=50,
-                                separator=["\n\n", "\n", ". ", " ", ""])
+        return SentenceSplitter(chunk_size=512, chunk_overlap=50, separator=["\n\n", "\n", ". ", " ", ""])
     if name == "hierarchical":
         return HierarchicalNodeParser.from_defaults(chunk_sizes=[2048, 512, 128])
     if name == "semantic":
@@ -208,7 +208,7 @@ def get_llm(name: str):
     raise ValueError(f"LLM '{name}' non supportato.")
 
 
-def get_synthesizer(llm, response_mode="compact"):
+def get_synthesizer(llm, response_mode=ResponseMode.COMPACT):
     """
     Crea il componente di sintesi della risposta con un prompt
     che forza l'LLM a citare le fonti e a non allucinare.

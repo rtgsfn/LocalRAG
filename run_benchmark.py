@@ -16,6 +16,7 @@ from llama_index.core.evaluation import RelevancyEvaluator, FaithfulnessEvaluato
 from llama_index.retrievers.bm25 import BM25Retriever
 # Import per RRF
 from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
 
 # Importa le nostre factory e config
 from strategies import (
@@ -129,7 +130,7 @@ def run_query_experiment(index: VectorStoreIndex, config: QueryConfig, llm, rera
             retrievers=[dense_retriever, sparse_retriever],
             similarity_top_k=10,  # Recupera i top 10 da entrambi
             num_queries=1,  # Una sola query per mantenere la latenza bassa (on-premise)
-            mode="reciprocal_rerank",  # RRF: combina i ranking di BM25 e Vector Search
+            mode=FUSION_MODES.RECIPROCAL_RANK,  # RRF: combina i ranking di BM25 e Vector Search
             use_async=False,
         )
 
