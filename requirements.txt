@@ -5,6 +5,7 @@ llama-index
 torch
 llama-index-core
 pyarrow>15.0.0
+docling
 
 # Servizi (Ollama, Vector Stores)
 llama-index-llms-ollama

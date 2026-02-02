@@ -212,8 +212,8 @@ if __name__ == "__main__":
 
     # --- !! QUI DEFINISCI TUTTE LE COMBINAZIONI !! ---
     # (Come prima)
-    PARSERS = ["simple_pdf", "nougat_associative"]
-    CHUNKERS = ["recursive", "semantic"]  # Il benchmark testerà entrambi su entrambi i parser
+    PARSERS = ["simple_pdf", "nougat_associative", "docling"]
+    CHUNKERS = ["recursive", "semantic", "hybrid_markdown"]  # Il benchmark testerà entrambi su entrambi i parser
     EMBEDDERS = ["bge-large"]
     RERANKERS = ["none", "bge-reranker"]
     VECTOR_STORES = ["qdrant"]

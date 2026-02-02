@@ -31,6 +31,23 @@ from config import (
     DEVICE, OLLAMA_BASE_URL
 )
 
+from docling.document_converter import DocumentConverter
+from llama_index.core.schema import Document
+
+
+# Crea la nuova classe per Docling
+class DoclingParser:
+    def __init__(self):
+        self.converter = DocumentConverter()
+
+    def load_data(self, file_path):
+        # Converte il PDF in Markdown usando Docling
+        result = self.converter.convert(file_path)
+        md_output = result.document.export_to_markdown()
+
+        # Restituisce un oggetto Document compatibile con LlamaIndex
+        return [Document(text=md_output, metadata={"source": file_path, "parser": "docling"})]
+
 
 class AssociativeNougatParser:
     def __init__(self):
@@ -90,6 +107,8 @@ class AssociativeNougatParser:
 def get_parser(name: str):
     if name == "simple_pdf":
         return SimpleDirectoryReader()
+    if name == "docling":
+        return DoclingParser()
     if name == "nougat":
         return PDFNougatOCR()
     if name == "nougat_associative":
